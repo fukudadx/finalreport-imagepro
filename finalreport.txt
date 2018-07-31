@@ -1,0 +1,38 @@
+import numpy as np
+import cv2
+
+capture = cv2.VideoCapture(0)
+kernel = np.ones((7,7),np.uint8)
+
+while(True):
+ret, frame = capture.read()
+
+#transform into gray and binary
+gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+ret, coin_bin = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+#Morphology processing
+opening = cv2.morphologyEx(coin_bin, cv2.MORPH_OPEN, kernel)
+closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+outline = cv2.Canny(closing, 30, 150)
+
+#extra contour
+cnts = cv2.findContours(outline, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
+cv2.drawContours(frame, cnts, -1, (0, 255, 0), 2)
+
+#calculation
+result = (int(len(cnts)) ) * 100
+
+#show sum money
+cv2.putText(frame, 'sum: ' + str(result), (0,50), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 255), 3, cv2.LINE_AA)
+cv2.imshow('coin_counter', frame)
+
+#end key
+if cv2.waitKey(1) & 0xFF == ord('q'):
+break
+
+capture.release()#####リリース
+cv2.waitKey(1)
+cv2.destroyAllWindows()
+cv2.waitKey(1)
+
